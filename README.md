@@ -63,11 +63,7 @@ Skeleton-like point linking
 Wireframe effects
 Screenshots
 
-Add screenshots here:
 
-![scanner](screenshots/scanner_01.jpg)
-![radar](screenshots/radar_01.jpg)
-![motion](screenshots/motion_01.jpg)
 Requirements
 Desktop
 Python 3.10+
