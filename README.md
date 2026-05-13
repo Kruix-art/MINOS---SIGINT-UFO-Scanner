@@ -1,179 +1,282 @@
-# MINOS---SIGINT-UFO-Scanner (ANDROID ONLY)
-A real time micro motion tracking display for phones with the intent of tracking objects HIGH in the sky in style. 
+# MINOS - SIGINT // UFO Scanner  
+## Advanced Tracking Module for Android
 
+**MINOS - SIGINT // UFO Scanner** is an experimental Android-friendly computer vision scanner built with **Python, Kivy, OpenCV, and YOLO ONNX**.
 
-A lightweight real-time SIGINT-style motion scanner built with Python, OpenCV, and Kivy.
+It turns a phone camera into a sci-fi SIGINT-style motion analysis tool with reticle capture, micro-motion detection, stabilized target locking, radar overlays, zoomed target inspection, and one-time AI snap tagging.
 
-Designed for Android / Pydroid 3 and desktop environments, this project turns a camera feed into a stylized low-level surveillance system capable of tracking extremely small motion signatures — including distant lights, micro movement, airborne particles, and fast moving anomalies.
+This project is designed to run on Android using **Pydroid 3**.
 
-The project combines:
+---
 
-Micro-motion detection
-Radar-style object tracking
-Terminal-inspired holographic overlays
-Wireframe / scanline rendering
-Real-time motion telemetry
-Experimental “UFO scanner” behavior
-Features
-UFO / Micro Motion Detection
+## Features
 
-Tracks movement down to near pixel-level changes.
+- Live Android camera feed
+- Pixel-level micro-motion detection
+- Reticle-based target capture
+- Advanced stabilized target tracking
+- Kalman prediction smoothing
+- Optical flow recovery
+- Local motion reacquire
+- Target memory when object temporarily disappears
+- YOLO ONNX snap-tagging after capture
+- YOLO runs once, then shuts off during tracking to save performance
+- Enlarged target inspector window
+- Radar-style motion display
+- Digital camera zoom
+- Manual focus slider when supported
+- Exposure lock and white balance lock attempts
+- Compact UI mode to hide sliders
+- Terminal-green SIGINT visual style
 
-Unlike traditional motion trackers that require large blobs, this scanner can detect:
+---
 
-Tiny moving lights
-Distant aircraft
-Fast particles
-Small insects
-Faraway movement signatures
-Sensor anomalies
+## What This Is
 
-Sensitivity can be tuned live through thresholds and motion filtering.
+This is a visual computer-vision experiment.
 
-Radar System
+It does not emit radar, transmit signals, interfere with aircraft, or interact with anything physically.  
+All tracking happens locally by analyzing pixels from the phone camera.
 
-Includes a real-time radar overlay that:
+---
 
-Tracks detected motion points
-Maps movement into radar space
-Sweeps continuously
-Displays target blips
-Simulates SIGINT / aerospace scanning systems
+## Requirements
 
-Targets appear dynamically as motion enters the camera frame.
-
-SIGINT Visual Style
-
-Inspired by:
-
-Military ISR systems
-Analog surveillance hardware
-CRT terminals
-Low-poly PS2 rendering
-Tactical scan overlays
-Thermal imaging systems
-
-Includes:
-
-Green terminal overlays
-Scanlines
-Bracket tracking
-Motion vectors
-Skeleton-like point linking
-Wireframe effects
-Screenshots
-
-
-Requirements
-Desktop
-Python 3.10+
-OpenCV
-NumPy
-Kivy
-
-Install dependencies:
-
-pip install opencv-python kivy numpy
-Android (Pydroid 3)
+### Android
 
 Recommended:
 
-Pydroid 3
-OpenCV plugin
-Kivy support package
+- Android phone
+- Pydroid 3
+- Pydroid repository plugin
+- OpenCV installed in Pydroid
+- Kivy installed in Pydroid
+- NumPy installed in Pydroid
 
-The script was designed specifically to remain lightweight enough for mobile realtime rendering.
+### Python Packages
 
-Running
-python minos_sigint_ufo_scanner_radar.py
+Install these in Pydroid 3:
+
+```bash
+pip install numpy
+pip install opencv-python
+pip install kivy
+
+If opencv-python gives issues on Android, install OpenCV from the Pydroid 3 plugin/repository instead.
+
+File Structure
+
+Recommended folder layout:
+
+/storage/emulated/0/Python Projects/
+│
+├── minos_sigint_ufo_scanner_advanced_lock.py
+├── download_minos_mobile_models_fixed.py
+│
+└── models/
+    └── yolov8n.onnx
+
+The scanner expects the YOLO model here:
+
+/storage/emulated/0/Python Projects/models/yolov8n.onnx
+Installation on Android / Pydroid 3
+1. Install Pydroid 3
+
+Install Pydroid 3 from the Play Store.
+
+Also install:
+
+Pydroid repository plugin
+Pydroid permissions plugin if needed
+2. Create the Project Folder
+
+Open your Android file manager and create:
+
+/storage/emulated/0/Python Projects/
+
+Inside it, create:
+
+/storage/emulated/0/Python Projects/models/
+3. Add the Scanner Script
+
+Copy this file into:
+
+/storage/emulated/0/Python Projects/
+minos_sigint_ufo_scanner_advanced_lock.py
+4. Download the Model
+
+Run the downloader script:
+
+python download_minos_mobile_models_fixed.py
+
+It should place:
+
+yolov8n.onnx
+
+inside:
+
+/storage/emulated/0/Python Projects/models/
+5. Run the Scanner
+
+Run:
+
+python minos_sigint_ufo_scanner_advanced_lock.py
+
+Allow camera permission when Android asks.
+
 Controls
-Control	Function
-Motion Toggle	Enables/disables motion tracking
-Radar Toggle	Enables radar system
-Palette Button	Cycles render palettes
-Threshold Slider	Motion sensitivity
-Box Color Button	Changes overlay color
-UFO Mode	Enables ultra-sensitive micro motion
-UFO Scanner Mode
+Main Buttons
+Button	Function
+CAPTURE RETICLE	Locks the strongest motion near the center reticle
+UNLOCK TARGET	Clears the current target
+SNAP YOLO	Enables/disables one-time YOLO tagging
+FLOW ON	Enables optical-flow recovery
+MODE	Cycles visual render mode
+RADAR ON	Toggles radar overlay
+FOCUS AUTO/MAN	Attempts manual focus control
+SLIDERS HIDE	Hides sliders for more screen space
+How Target Lock Works
 
-The UFO mode lowers the minimum motion area to near pixel-level detection.
+The scanner does not constantly auto-lock random motion.
 
-Example settings:
+The intended flow is:
 
-self.motion_min_area = 1
-self.motion_threshold = 6
-self.motion_blur = 1
+Aim reticle at target
+↓
+Press CAPTURE
+↓
+Scanner locks the best micro-motion near center
+↓
+YOLO tags it once
+↓
+YOLO shuts off
+↓
+Kalman + optical flow + motion memory keep tracking
 
-This enables tracking of extremely small movement signatures.
+This keeps performance better on Android and prevents the AI from constantly identifying unrelated background objects.
 
-Because of this sensitivity, environmental noise may also become visible:
+Tracking System
 
-Dust
-Compression artifacts
-Camera grain
-Reflections
-Insects
-Atmospheric flicker
-Performance Notes
+The advanced tracker combines:
 
-For smoother mobile performance:
+Micro-Motion Detection
 
-Recommended:
+Detects tiny pixel changes in the camera feed.
 
-FRAME_W = 640
-FRAME_H = 360
+Kalman Prediction
 
-Disable:
+Smooths motion and predicts where the target should move next.
 
-Heavy wireframe rendering
-Dense point linking
-High contour counts
+Optical Flow
 
-if FPS becomes unstable.
+Tracks small local image features around the locked target.
 
-Project Goals
+Local Reacquire
 
-MINOS SIGINT is intended as:
+If motion disappears briefly, the scanner searches near the predicted target position.
 
-An experimental visualization project
-A realtime motion analysis prototype
-A stylized surveillance interface
-A synthetic ISR aesthetic system
-A sci-fi inspired scanner interface
+Target Memory
 
-This project is not intended for security or aerospace use.
+The scanner remembers:
 
-Future Ideas
+last position
+velocity
+box size
+average brightness
+local color profile
+last known target area
 
-Planned / experimental concepts:
+This helps stabilize the lock.
 
-Thermal fusion mode
-AI object labeling
-Biometric silhouette tracking
-Star tracking mode
-Low-light amplification
-Point-cloud motion accumulation
-Satellite-style map overlay
-Synthetic targeting telemetry
-Multi-camera fusion
-Audio-reactive SIGINT mode
+YOLO Snap Tagging
+
+YOLO is used only once per capture.
+
+After a successful lock:
+
+YOLO scans the locked target crop
+assigns a label/confidence
+stores the tag
+then shuts off during tracking
+
+Example labels:
+
+AIRPLANE
+BIRD
+CAR
+PERSON
+UNKNOWN
+
+If no confident object is found, the target is labeled:
+
+UNKNOWN
+Performance Tips
+
+For smoother Android performance:
+
+Use compact slider mode
+Keep camera zoom under 3x
+Keep max motion points around 150–220
+Use YOLO snap once, not continuous AI
+Turn off thermal/dither mode if laggy
+Use exposure lock if the screen keeps flickering
+Use a tripod for sky tracking
+
+Recommended settings:
+
+Threshold: 6–12
+Min Area: 1–3 px
+Max Points: 150–220
+Camera Zoom: 1x–3x
+Lock Radius: 60–90 px
+Flow Radius: 24–40 px
+Known Limitations
+Manual focus may not work on every Android phone.
+Exposure lock may be ignored by some camera drivers.
+YOLO can only identify classes it was trained on.
+Tiny sky objects may be labeled UNKNOWN.
+Digital zoom reduces image quality.
+Hand shake can create false motion.
+Low light increases noise.
+Safety / Legal Notes
+
+This app only analyzes camera pixels locally.
+
+It does not:
+
+emit radar
+transmit signals
+interfere with aircraft
+communicate with drones
+affect anything you point it at
+@ Copyright Tyler Vinge 2026
+Use responsibly:
+
+Do not shine lasers at aircraft
+Do not record people without permission where prohibited
+Do not use while driving
+Follow local drone/aircraft/privacy laws
 License
 
 MIT License
+
+You may use, modify, distribute, and remix this project freely as long as the license notice is included.
 
 Credits
 
 Built with:
 
 Python
-OpenCV
 Kivy
+OpenCV
 NumPy
+YOLO ONNX
 
-Inspired by:
+Concept and visual style inspired by:
 
-Tactical ISR systems
-Analog military displays
-Retro-futurism
-Experimental surveillance aesthetics
-PS1 / PS2 era rendering pipelines
+SIGINT interfaces
+aerospace tracking displays
+CRT terminals
+radar screens
+sci-fi surveillance systems
+MINOS project visual language
