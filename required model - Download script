@@ -1,0 +1,174 @@
+# download_minos_mobile_models_fixed.py
+# Android / Pydroid 3 friendly model setup for MINOS SIGINT.
+#
+# Fixes the old 404 issue:
+# - Ultralytics GitHub release URLs usually host .pt weights, not direct yolov8n.onnx.
+# - This downloader now tries several working ONNX mirrors first.
+# - It also organizes your existing MobileNetSSD files into:
+#     /storage/emulated/0/Python Projects/models
+#
+# Run:
+#   python download_minos_mobile_models_fixed.py
+
+import os
+import shutil
+import urllib.request
+import urllib.error
+from pathlib import Path
+
+
+BASE_DIR = Path("/storage/emulated/0/Python Projects")
+MODEL_DIR = BASE_DIR / "models"
+
+MOBILENET_PROTO = "MobileNetSSD_deploy.prototxt"
+MOBILENET_MODEL = "MobileNetSSD_deploy.caffemodel"
+YOLO_ONNX = "yolov8n.onnx"
+
+# Multiple fallback URLs because public model hosts move files sometimes.
+# The Hugging Face /resolve/ URL is usually the best Android/Pydroid option.
+YOLO_ONNX_URLS = [
+    "https://huggingface.co/Kalray/yolov8/resolve/main/yolov8n.onnx?download=true",
+    "https://huggingface.co/SpotLab/YOLOv8Detection/resolve/main/yolov8n.onnx?download=true",
+    "https://github.com/yoobright/yolo-onnx/raw/master/yolov8n.onnx",
+]
+
+# Official Ultralytics .pt fallback. This is useful if you later export to ONNX manually.
+YOLO_PT_URLS = [
+    "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt",
+]
+
+
+def ensure_dir(path: Path):
+    path.mkdir(parents=True, exist_ok=True)
+
+
+def copy_existing_if_needed(filename: str):
+    src = BASE_DIR / filename
+    dst = MODEL_DIR / filename
+
+    if dst.exists() and dst.stat().st_size > 1024:
+        print(f"Already exists: {dst}")
+        return True
+
+    if src.exists() and src.stat().st_size > 1024:
+        shutil.copy2(src, dst)
+        print(f"Copied existing: {dst}")
+        return True
+
+    print(f"Missing existing file: {filename}")
+    return False
+
+
+def download_file(url: str, dst: Path, min_bytes: int = 1024 * 1024):
+    temp = dst.with_suffix(dst.suffix + ".part")
+
+    if temp.exists():
+        try:
+            temp.unlink()
+        except Exception:
+            pass
+
+    print("\nDownloading:")
+    print(f"  {url}")
+    print("To:")
+    print(f"  {dst}")
+
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0 MINOS-SIGINT-Pydroid",
+            "Accept": "*/*",
+        },
+    )
+
+    with urllib.request.urlopen(req, timeout=60) as response:
+        total = response.headers.get("Content-Length")
+        total = int(total) if total and total.isdigit() else None
+
+        downloaded = 0
+        chunk_size = 1024 * 256
+
+        with open(temp, "wb") as f:
+            while True:
+                chunk = response.read(chunk_size)
+                if not chunk:
+                    break
+                f.write(chunk)
+                downloaded += len(chunk)
+
+                if total:
+                    pct = downloaded / total * 100.0
+                    print(f"\r  {downloaded / (1024 * 1024):.2f} MB / {total / (1024 * 1024):.2f} MB  {pct:.1f}%", end="")
+                else:
+                    print(f"\r  {downloaded / (1024 * 1024):.2f} MB", end="")
+
+    print()
+
+    size = temp.stat().st_size if temp.exists() else 0
+    if size < min_bytes:
+        try:
+            temp.unlink()
+        except Exception:
+            pass
+        raise RuntimeError(f"Downloaded file was too small: {size} bytes")
+
+    if dst.exists():
+        dst.unlink()
+
+    temp.rename(dst)
+    print(f"Saved: {dst} ({dst.stat().st_size / (1024 * 1024):.2f} MB)")
+    return True
+
+
+def try_download_any(urls, dst: Path, min_bytes: int):
+    errors = []
+
+    if dst.exists() and dst.stat().st_size >= min_bytes:
+        print(f"Already exists: {dst} ({dst.stat().st_size / (1024 * 1024):.2f} MB)")
+        return True
+
+    for url in urls:
+        try:
+            return download_file(url, dst, min_bytes=min_bytes)
+        except Exception as exc:
+            errors.append(f"{type(exc).__name__}: {exc}")
+            print(f"Download failed: {type(exc).__name__} {exc}")
+
+    print("\nAll download attempts failed.")
+    for e in errors:
+        print(" -", e)
+    return False
+
+
+def main():
+    ensure_dir(MODEL_DIR)
+
+    print(f"Model folder: {MODEL_DIR}")
+
+    copy_existing_if_needed(MOBILENET_PROTO)
+    copy_existing_if_needed(MOBILENET_MODEL)
+
+    yolo_ok = try_download_any(
+        YOLO_ONNX_URLS,
+        MODEL_DIR / YOLO_ONNX,
+        min_bytes=5 * 1024 * 1024,
+    )
+
+    if not yolo_ok:
+        print("\nONNX download failed. Trying official YOLOv8n .pt fallback...")
+        try_download_any(
+            YOLO_PT_URLS,
+            MODEL_DIR / "yolov8n.pt",
+            min_bytes=5 * 1024 * 1024,
+        )
+
+    print("\nDONE.")
+    print("Expected files:")
+    print(f"  {MODEL_DIR / MOBILENET_PROTO}")
+    print(f"  {MODEL_DIR / MOBILENET_MODEL}")
+    print(f"  {MODEL_DIR / YOLO_ONNX}")
+    print("\nIf yolov8n.onnx still fails on your phone, the scanner will fall back to MobileNetSSD.")
+
+
+if __name__ == "__main__":
+    main()
